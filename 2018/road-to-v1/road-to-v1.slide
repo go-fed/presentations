@@ -1,6 +1,6 @@
 GoFed: Road to v1
-Rose-Colored Hindsight; Current Events; Sagely Predictions
-00:00 31 Aug 2018
+Rose-Colored Hindsight; Current Events; Sage Predictions
+20:00 28 Aug 2018
 Tags: golang, ActivityPub, federation
 
 Cory Slep
@@ -111,7 +111,7 @@ reason why go-fed can't grow to support all of these as needed.
 
 The goal of Litepub is to strip the requirement of JSON-LD from ActivityStreams
 when implementing ActivityPub. There may be other secondary objectives (such as
-security), but I am not familiar enough to go into too much further detail.
+security), but I am not familiar enough to go into further detail.
 
 This is a little unique for go-fed. Most other non-statically-typed languages
 may rely on some form of JSON-LD semantics in order to derive meaning from their
@@ -139,9 +139,8 @@ As go-fed is dynamic, this would be almost a completely new effort.
 
 * Possible 1.x Milestones
 
-Now that I have framed the state of the world as I see it, it is time to apply
-it to some concrete large-scale milestones, as well as a 4th one I wanted to
-capture from various comments in the GitHub issues:
+Keeping the concurrent events in mind, it is time to look at some concrete
+milestones. I have included a 4th one from various comments in GitHub issues:
 
 - Make supporting new vocabulary extensions to ActivityStreams pleasant.
 - Be an early (first?) adopter to the litepub effort, let go-fed support both litepub-based and ActivityStreams-based methods (if they differ).
@@ -170,8 +169,8 @@ Reasons for not selecting the others are:
 
 - It's too early to begin to support Litepub, though this would be a great follow-on milestone.
 - Figuring out how to appeal to static-website users is a little too abstract a problem to tackle right now.
-- Alternative ways to statically map ActivityStream and ActivityPub to Go is a little too abstract a problem to tackle right now.
-- Pursuing any of these alternatives means expand go-fed beyond the Core and Extended ActivityStream types is not simple.
+- Alternative ways to statically map ActivityStreams and ActivityPub types to Go is a little too abstract a problem to tackle right now.
+- Pursuing any of these alternatives means expanding go-fed beyond the Core and Extended ActivityStream types is not simple.
 
 * Target 1.x Milestones: What's the opportunity cost?
 
@@ -179,7 +178,7 @@ What I am missing out on for choosing this route:
 
 - Possibility of becoming the first Litepub implementation somehow.
 - Providing mass-appeal to static-website users and the internet glory along with it.
-- Exploring more of type theory and come up with a more appealing mapping between ActivityStreams/ActivityPub and Go.
+- Exploring more of type theory to come up with a more appealing mapping between ActivityStreams/ActivityPub and Go.
 
 * Risks
 
@@ -195,11 +194,11 @@ If I don't feel like it, am sick, or am dead, not much gets done.
 
 I think competition is healthy and that go-fed is a unique competitor in this
 space. It is a library, so instead of end-users determining its success, it is
-adoption by developers. Therefore, it being in a language that is statically
-typed also is a unique point.
+adoption by developers. Additionally, the statically typed nature of Go is a
+unique point.
 
-Therefore, both of these differences are barriers to adoption, the latter much
-to my chagrin.
+Both of these differences are barriers to adoption, the latter much to my
+chagrin.
 
 It is a risk that 1.x does not result in any new users of go-fed. In this case,
 it's probable that I'll begin considering whether to put it into maintenance
@@ -210,14 +209,12 @@ mode.
 - Continued compilation issues on linux_arm64.
 
 The existing library balloons the compiler's memory usage on this platform, to
-at least 3.5 GB of RAM. Since I don't have access to this platform to profile
-the compilation process, I haven't been able to pinpoint exactly the root
-cuase. Cross-compiling is not sufficient to reproduce this.
+at least 3.5 GB of RAM. I haven't yet been able to pinpoint the exact root
+cause. Cross-compiling is not sufficient to reproduce this.
 
 However, the general root cause is known to be the `go-fed/activity/vocab`
 package. Since this generated code will be revisited, there's a possibility this
-risk will not manifest in version 1.x. But there is the possibility it still
-could.
+risk will not manifest in version 1.x, but it still could.
 
 * Summary
 
