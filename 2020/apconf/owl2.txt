@@ -1,0 +1,17 @@
+{
+  "@context": [ /* ... */ ],
+  ...
+  {
+    "id": "https://forgefed.peers.community/ns#Repository",
+    "type": "owl:Class",
+    "example": [ /* ... */ ],
+    "notes": "Represents a version control system repository.",
+    "subClassOf": {
+      "type": "owl:Class",
+      "url": "https://www.w3.org/TR/activitystreams-vocabulary/#dfn-object",
+      "name": "as:Object"
+    },
+    "name": "Repository",
+    "url": "https://forgefed.peers.community/vocabulary.html#type-repository"
+  }
+}
