@@ -1,0 +1,401 @@
+# Go-Fed: Past, Present, and Future
+Making An ActivityPub Library
+00:00 2 Oct 2020
+Tags: golang, activitypub, fediverse, go-fed
+
+Cory "CJ" Slep
+Go-Fed
+@cj@mastodon.technology
+https://go-fed.org
+
+: Author of go-fed
+: go-fed is a suite of Fediverse libraries
+: ActivityStreams, ActivityPub, HTTP Signatures
+: Only talking about the "activity" library
+: AS portions used in WriteFreely
+: Other bots, small apps, etc
+
+## Agenda
+
+Building the [activity](https://github.com/go-fed/activity) library
+
+1. Past: Two Design Choices
+2. Present: PSA: Where To Learn To Build Apps
+3. Future: Ecosystem Improvement
+
+: Here to talk about quite a bit
+: Want to build AS/AP library in a static lang? One major design choice
+: Building an App? Where to find info how to
+: Interested in ecosystem future? My outlook
+
+## Prologue
+
+First draft: 50 slides, super dry...
+
+.image helix.jpg _ 500
+
+: First, go in prepared
+: Original draft was >50 slides long
+: Was talking to dog and told him that it was way too long, showed him
+: No worries until dog starts talking back
+: "No one cares" is what he replied after I showed him
+
+## Library Design Problems
+
+ActivityStreams:
+
+* **JSON-LD Serialization / Deserialization**
+* Client API (golang)
+
+ActivityPub:
+
+* Peering protocol (HTTP)
+* Client API (golang)
+* **Flexibility & Extendability**
+
+: So there's a lot of design problems when making a technical library
+: I'm going to dive into only the two most interesting for static lang and lib
+
+## Principles (that I had)
+
+* ActivityStreams & ActivityPub specs: no more, no less
+* Strictly follow the spec, try to include as many SHOULDs*
+* Extensible across Vocabularies
+* Extensible across app behaviors
+* Push as much work into the compiler as possible
+
+*exception: `sharedInbox`
+
+: I had some principles to guide my design & thoughts
+: Not going to read the list
+: Principles are great because you can sound really formal in presentations later
+: Definitely does not mean you retroactively determined what they are
+: Highly recommended: can be a Lawful Good buzzkill in D&D groups
+
+## Landed
+
+.image go_fed_stack_horse.png _ 800
+
+: Built up a series of subpackages to address different concepts
+: They compose together or build off one another
+: JSON-LD, AS, AP
+: apcore addressed later
+: Left diagram is great because boring blocks don't do the artistic justice of building up a code stack
+
+## Landed (too many words edition)
+
+* Don't process JSON-LD
+* Write ActivityStreams Vocabulary Schemas
+* Code-generate 'em
+* ActivityStreams are native Go types
+* ActivityPub is middleware for HTTP handlers
+* Composable with other libraries
+
+: Skip processes/transforms JSON-LD
+: Done, one problem solved: don't turn in the homework
+: Use vocabulary schemas: AS, Security, ForgeFed, etc
+: Schemas are used in code generation
+: This is the extra unit of work for statically typed languages
+: Gen'd code: native Go types equiv AS types
+: ActivityPub is middleware
+: Add in your favorite flavor to top off this dessert code sundae
+
+## Past: One Design Choice - ActivityStreams
+
+: examine one past library choice
+
+## 🚨WEE WOO WARNING🚨
+
+.image weewoo.gif _ 200
+
+Warning: ActivityStreams is **NOT** an Object Oriented hierarchy.
+
+* `IntransitiveActivity` inherits all properties... except `object`
+* `Ignore`, `Join`, etc: "No meaning" to some properties
+* Mix & match: `Collection`/`OrderedCollection`, `items`/`orderedItems`
+
+*"Every time an RDF schema is mapped to OO hierarchies a demon earns its horns." - Tutankhamun* with 95% probability
+
+: OO is insufficient to specify AS schema
+: Lib has every Go type independent of each other
+: Properties are not guaranteed to be inherited: explicitly, implicitly, or TBD
+
+## Code Generation: Wire ABI
+
+Generated code must be byte-wire compatible: JSON-LD.
+
+Immediately, non-solutions:
+
+* protobufs
+* capn proto
+* "Did you consider X?" no, I didn't
+* etc
+
+Leaves: "Roll my own code generator"
+
+Why? Why would anyone subject themselves to this level of pain?
+
+: Must send JSON-LD on the wire for peers to understand
+: cannot send anything else
+: protobufs and pals not solutions:
+: They put bytes on the wire that are not JSON-LD
+: Their schema specifications are too restricting (neither RDF/triples)
+: They drop unknown/extension fields (proto v3.5 and before) violating ([AS Core 3.5](https://www.w3.org/TR/activitystreams-core/#extension-round-trip))
+: They stick their chewed gum anywhere except a trash can
+: Representation of multi-value multi-kind (array & one-of) inadequate
+: Restrictive for other compatibility reasons (JSON-LD signing, etc)
+: Roll my own code generator
+: Seems a little radical and masochistic, self-inflicted pain
+: "Dude, just pick a dynamically typed language and screw golang"
+
+## Wire ABI
+
+* Lower major barrier to a static-typed language
+* Get all the Golang devs
+* Vocabulary understanding is enshrined in code/schemas
+* JSON-LD processing could be addressed at generation time (right now: big nope)
+* Quickly produce supporting code for new specs (ex: ForgeFed)
+* TODO: fill in another reason and remove this line, it'd be *so embarassing* to leave this in a presentation
+
+: Well, thought it'd be cool to eliminate major barrier to static-type language
+: Reduce barrier to adoption by other devs
+: So many go devs, a ton, last I checked more than atoms in the universe
+: Vocabulary understanding: par w/ dynamic typed languages
+: JSON-LD processing could be addressed at codegen time
+: Don't want JSON-LD processing, PITA, too many ways to express anyways
+: Lowers barrier to bringing new vocabs to static typed lang
+
+## Wire ABI
+
+Forgefed took a contributor a short amount of time to get generated:
+
+.play forgefed_ex.go /BEGIN FFE1 OMIT/,/END FFE1 OMIT/ HLff
+
+: As an example, ForgeFed
+: Just waiting on Gogs or Gitea to use
+
+## Input Schema for Code Generation
+
+What to input into this tool? JSON-LD. In OWL2-notation.
+
+.code owl2.txt
+
+Exercise for reader: Write the OWL2 JSON-LD file for Go to generate the code to understand OWL2 (kids, don't attempt this at home)
+
+: So for this tool to gen code: what is input?
+: What is the format of the input?
+: Surprise, JSON-LD serialized data
+: The data are schemas defined by OWL2 vocab
+: This is a ForgeFed Repository type, noted by "OWL Class"
+: Subclass of the ActivityStreams Object type
+: Gives tool everything it needs to know to understand vocab structure
+
+## Input Schema for Code Generation
+
+JSON-LD notation: these schemas could be federated over ActivityPub.
+
+W3C publishes the ActivityStreams schema, ForgeFed community publishes its schema, etc...
+
+ ...and federated wikis are able to link to each other for developer discoverability.
+
+No centralized schema-hosting place (avoid repeating history).
+
+.image mind-blown.gif _ 400
+
+: Consider: these schemas are in JSON-LD syntax
+: ActivityPub federates JSON-LD data
+: so, what if we federate vocabulary schemas?
+: Central wikis listing all known vocabs, but none is central authority
+: centralized discovery, decentralized control
+
+## Past: One Design Choice - ActivityPub
+
+: Cool thought, will return to it
+: But that finishes the ActivityStreams look-back
+: Now diving into ActivityPub
+
+## Flexibility & Extendability: Building Behaviors
+
+Prioritize dependency injection. Apps set up behaviors, data flows
+through at runtime.
+
+.code ap_setup_snippet.go /BEGIN ASS1 OMIT/,/END ASS1 OMIT/
+
+: go-fed uses dependency injection to aggressively isolate itself
+: This translates into injecting behaviors at runtime
+: simple case: here is some business logic when something is created
+
+## Flexibility & Extendability: Building Behaviors
+
+Provide behavior upon request:
+
+.code ap_setup_snippet.go /BEGIN ASS2 OMIT/,/END ASS2 OMIT/ HLfun
+
+: Simply return the logic in a wrapper
+: Wrapper does AP-specific logic, like DB creation
+: Then calls business logic
+
+## Flexibility & Extendability: Grows With Your App by Shrinking
+
+If you want to implement AP behaviors yourself:
+
+.code ap_setup_snippet.go /BEGIN ASS3 OMIT/,/END ASS3 OMIT/ HLint
+
+.image one-loc.jpg _ 300
+
+: If app grows and needs to override the AP behaviors
+: No big deal, implement it and do small change
+: Lets you bootstrap quickly into prototype
+: Falls away as your app matures
+: Of course, the app writer still has to put the work in to do the replacing
+
+## Flexibility & Extendability: Composing With Others
+
+AP alone isn't always sufficient to federate.
+
+Compose (with HTTP sigs, in G♭ minor, etc).
+
+.code http_compose.go HLsig
+
+: If you need more tools to federate, go-fed doesn't get in the way
+: Simply use them in your impls and go-fed will still make same calls
+: For HTTP signatures, can be used in transport impl, go-fed don't know
+
+## Present: A Giant PSA
+
+: Comprehensive look at history
+: focused on it a lot, to document for potential adopters
+: now look at what's available at present for building apps
+: not too deep, very brief
+: mainly to share resources and links for voracious readers
+
+## PSA
+
+* [https://tour.golang.org/](https://tour.golang.org/) - learn golang
+* [https://go-fed.org](https://go-fed.org) - go-fed tutorial/resources
+* [https://socialhub.activitypub.rocks/](https://socialhub.activitypub.rocks/) - general ActivityPub discussions
+* [The longer version of these slides](https://github.com/go-fed/presentations/tree/master/2020/apconf) - better as a bedtime read
+
+: Best way to dive in is on the go-fed website
+: Provides yet another look over this library for you
+: digs into more tech details
+: if its down, ping me on mastodon
+: SocialHub small community of developers
+: Might be useful for cross-software federating debugging, questions, etc
+: Also useful for planning future action
+: These slides
+
+## PSA: Unofficial Testsuite
+
+I made an unofficial testsuite @ [https://test.activitypub.dev/](https://test.activitypub.dev/)
+
+"Official Test Suite Down" very common GitHub issue in W3C's AP repo
+
+I imagine W3C be like:
+
+.image i-know-hades.gif _ 500
+
+: For automated tests against software, developed unofficial machine-assisted testsuite
+: Covers the MUSTs and SHOULDs of the AP spec decently
+: The official one is down -- long standing problem
+: The S2S portion of it was a questionaire, this is a bit more rigorous
+: Only one or two on-your-honor questions, rest are machine-run tests
+: Unofficial tool for you
+
+## PSA: Library (as in literature)
+
+Finally, made a library (as in: for literature)
+
+Peruse or contribute at your leisure on technical and cultural topics.
+
+Connect with the community you're helping build.
+
+[https://library.activitypub.dev/](https://library.activitypub.dev/)
+
+: Then, there's the human element
+: Tried to assemble some blog posts from folks
+: Tiny slice of technical and nontechnical fediverse culture
+: Please feel free to peruse and contribute
+: Also, hope it demonstrates there's room to care about communities you help build, beyond technical
+
+## Future: Ecosystem Improvement
+
+: With that look of where go-fed's been and where it is, time to look towards the future
+: There's a lot of future topics for AP I am interested in
+: I don't have time to cover them all, here are the big ones
+
+## Future: apcore
+
+apcore intends to be an "on-rails" framework, in contrast to mega-minimal go-fed/activity library.
+
+Path Forward: Builds off of go-fed.
+
+: apcore intends to be way more handhold-y
+: the path forward is to build off of go-fed
+
+## Future: Federating Schemas/Behavior-Capabilities
+
+Refreshing Slide 14:
+
+*W3C publishes the ActivityStreams schema, ForgeFed community publishes its schema, etc...*
+
+*...and federated wikis are able to link to each other for developer discoverability.*
+
+*No centralized schema-hosting place (avoid repeating history).*
+
+Could be extended beyond "vocab schemas" to "AP Flavors" (ex: webfinger+HTTP Signatures vs OCAP+Tor vs ...)
+
+Similar in concept to FEDERATING.txt doc, but structured data and federated.
+
+Path Forward: Composable with go-fed.
+
+: repeating slide 29
+: Possible path where standards communities federate
+: But, they let peers' standards be discoverable on their site
+: Vocabulary growth and curation
+: Makes clearer which community really owns & maintains the schemas
+: No single big monolith Schema organization point of failure
+: But, this idea can extend beyond vocab to "AP flavors"
+: More rigorous documentation of federated software
+: Devs documenting their app/tools for other devs
+: path forward is to compose with go-fed
+
+## Future: Mobile-supported P2P
+
+Doing ActivityPub peer-to-peer with a phone as a first-class supported device.
+
+Use Delaty-Tolerant Networking: Phones go off and online all the time, with data availability limited by ISPs/providers
+
+Use OCAP: A way to securely do data authorization in a distributed network without needing central-authorities (no-DNS gets towards this mindset)
+
+: Supporting mobile devices in a P2P environment is why
+: Delay tolerant networking and OCAP solve problems with intermittent connectivity and limited memorystorage
+: why this vision?
+
+## Future: Mobile-supported P2P
+
+Why phone first-class? Phones are more accessible to people than renting remote dedicated servers.
+
+Why peer-to-peer? Bring control/freedom as close to user as possible.
+
+Why ActivityPub? Can scale across different kinds of domains/actions (vocabularies) *and* different transport methods*.
+
+: Phones are readily accessible to average person
+: P2P scales the control/freedom to as close to user as possible
+: ActivityPub scales across domains/actions (vocabularies) and ways of reliably maintaining communication
+
+## Future: AP v2?
+
+*"different transport methods" not permitted in original ActivityPub spec.
+
+Permitting SSB and other non-HTTP protocols could enable different methods of federating with different properties/tradeoffs.
+
+Who knows!
+
+: Well the last bit of the last slide is a bit of a lie
+: Current AP is tied to HTTP specifically with no mechanism for extension
+: V2 extending to non-HTTP protocols like SSB would really solidify it
+: App writers could choose the transport method appropriate for their app interaction
+: v2 Huge topic on its own, going to leave it at that for now
+: BoF session on this, please join
+: Thank you!

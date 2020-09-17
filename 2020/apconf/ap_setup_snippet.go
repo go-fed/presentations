@@ -10,7 +10,7 @@ createLogic := func(c context.Context, create vocab.ActivityStreamsCreate) error
 // This function satisfies an interface for the middleware to call.
 func (myService) FederatingCallbacks(c context.Context) (pub.FederatingWrappedCallbacks, []interface, error) {
 	return pub.FederatingWrappedCallbacks{
-		Create: createLogic,
+		Create: createLogic, // HLfun
 		// Delete: ...,
 		// Update: ...,
 		// Like: ...,
