@@ -235,7 +235,7 @@ Provide behavior upon request:
 : Wrapper does AP-specific logic, like DB creation
 : Then calls business logic
 
-## Flexibility & Extendability: Grows With Your App by Shrinking
+## Flexibility & Extendability: Grow by Using Less
 
 If you want to implement AP behaviors yourself:
 
