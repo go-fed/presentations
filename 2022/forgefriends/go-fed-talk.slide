@@ -1,0 +1,41 @@
+# Go-Fed: 5 Minute Lightning Talk
+Making An ActivityPub Library
+10:00 19 Jan 2022
+Tags: golang, activitypub, fediverse, go-fed
+
+Cory "CJ" Slep
+Go-Fed
+@cj@mastodon.technology
+https://go-fed.org
+
+: Author of go-fed
+: go-fed is a suite of Fediverse libraries
+: ActivityStreams, ActivityPub, HTTP Signatures
+
+## What's The Stack?
+
+.image go_fed_stack_horse.png _ 800
+
+: Built up a series of subpackages to address different concepts
+: They compose together or build off one another
+: JSON-LD, AS, AP
+: apcore addressed later
+: Left diagram is great because boring blocks don't do the artistic justice of building up a code stack
+
+## Who Uses Go-Fed for ActivityPub Federation?
+
+* WriteFreely / Write.as / Read.as
+* GoToSocial
+* Owncast
+* Various small one-off apps
+
+ ... and hopefully Gitea!
+
+## Future: Gardeners Welcome
+
+Would be helpful to find one other person to help co-garden the software.
+
+* Responding to issues
+* Working on solutions
+* Reviewing PRs
+* Participation in the SocialHub
